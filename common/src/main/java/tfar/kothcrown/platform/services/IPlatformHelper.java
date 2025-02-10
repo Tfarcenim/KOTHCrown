@@ -53,4 +53,5 @@ public interface IPlatformHelper {
                    int textureWidth, int textureHeight);
 
     int countPools(LootTable lootTable);
+
 }
