@@ -5,17 +5,17 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.*;
 import net.minecraft.world.item.ItemStack;
+import tfar.kothcrown.platform.Services;
 
 
 import javax.annotation.Nonnull;
 import java.util.Optional;
 
-public abstract class ThroneMenu extends AbstractContainerMenu {
+public class ThroneMenu extends AbstractContainerMenu {
 
     public final Inventory playerInventory;
     public final int rows;
-    public final DankInterface dankInventory;
-    protected final DataSlot pickup;
+    public final ThroneInventory dankInventory;
 
     public enum ButtonAction {
         LOCK_FREQUENCY, SORT,
@@ -23,23 +23,23 @@ public abstract class ThroneMenu extends AbstractContainerMenu {
         static final ButtonAction[] VALUES = values();
     }
 
+    public ThroneMenu(int windowId,Inventory inventory) {
+        this(windowId,inventory,new ThroneInventory(null));
+    }
 
-    public AbstractDankMenu(MenuType<?> type, int windowId, Inventory playerInventory, DankInterface dankInventory) {
-        super(type, windowId);
+    public ThroneMenu(int windowId, Inventory playerInventory, ThroneInventory dankInventory) {
+        super(Init.THRONE_MENU,windowId);
         this.playerInventory = playerInventory;
         this.dankInventory = dankInventory;
-        this.rows = dankInventory.getContainerSizeDank() /9;
-        addDataSlots(dankInventory);
+        this.rows = 6;
         if (!playerInventory.player.level().isClientSide) {
             setSynchronizer(new CustomSync((ServerPlayer) playerInventory.player));
         }
-        pickup = playerInventory.player.level().isClientSide ? DataSlot.standalone(): getServerPickupData();
-        addDataSlot(pickup);
+        addDankSlots();
+        addPlayerSlots(playerInventory);
     }
 
-    protected abstract DataSlot getServerPickupData();
-
-    protected void addPlayerSlots(Inventory playerinventory, int locked) {
+    protected void addPlayerSlots(Inventory playerinventory) {
         int yStart = 32 + 18 * rows;
         for (int row = 0; row < 3; ++row) {
             for (int col = 0; col < 9; ++col) {
@@ -52,10 +52,7 @@ public abstract class ThroneMenu extends AbstractContainerMenu {
         for (int row = 0; row < 9; ++row) {
             int x = 8 + row * 18;
             int y = yStart + 58;
-            if (row != locked)
-                this.addSlot(new Slot(playerinventory, row, x, y));
-            else
-                this.addSlot(new LockedSlot(playerinventory, row, x, y));
+            this.addSlot(new Slot(playerinventory, row, x, y));
         }
     }
 
@@ -138,11 +135,7 @@ public abstract class ThroneMenu extends AbstractContainerMenu {
         ButtonAction buttonAction = ButtonAction.VALUES[id];
         if (player instanceof ServerPlayer serverPlayer) {
             switch (buttonAction) {
-                case LOCK_FREQUENCY -> dankInventory.toggleFrequencyLock();
-                case SORT -> dankInventory.sort();
-                case COMPRESS -> dankInventory.compress(serverPlayer);
-                case TOGGLE_TAG -> CommonUtils.toggleTagMode(serverPlayer);
-                case TOGGLE_PICKUP -> CommonUtils.togglePickupMode(serverPlayer);
+
             }
         }
         return true;
@@ -182,7 +175,7 @@ public abstract class ThroneMenu extends AbstractContainerMenu {
             for (int col = 0; col < 9; ++col) {
                 int x = 8 + col * 18;
                 int y = row * 18 + 18;
-                this.addSlot(Services.PLATFORM.createSlot(dankInventory, slotIndex, x, y));
+                this.addSlot(new ThroneSlot(dankInventory, slotIndex, x, y));
                 slotIndex++;
             }
         }
@@ -268,18 +261,12 @@ public abstract class ThroneMenu extends AbstractContainerMenu {
     }
 
     public boolean isDankSlot(Slot slot) {
-        return slot.getClass().getName().endsWith("DankSlot");
+        return slot.getClass().getName().endsWith("ThroneSlot");
     }
 
     @Override
     public void broadcastChanges() {
         super.broadcastChanges();
-        //the remote inventory needs to know about locked slots
-        for (int i = 0; i < dankInventory.getDankStats().slots; i++) {
-            Services.PLATFORM.sendToClient(new S2CSendGhostSlotPacket(containerId,i, dankInventory.getGhostItem(i)), (ServerPlayer)
-                    playerInventory.player);
-        }
     }
 
-    public abstract void setFrequency(int freq);
 }

@@ -17,6 +17,7 @@ public class ModItemModelProvider extends ItemModelProvider {
     @Override
     protected void registerModels() {
         makeSimpleBlockItem(Init.KING_OF_THE_HILL.asItem());
+        makeSimpleBlockItem(Init.THRONE_ITEM.asItem());
     }
 
     protected void makeSimpleBlockItem(Item item, ResourceLocation loc) {

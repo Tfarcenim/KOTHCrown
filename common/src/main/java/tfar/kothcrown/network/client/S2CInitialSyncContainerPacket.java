@@ -5,7 +5,6 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
-import tfar.kothcrown.ThroneMenu;
 import tfar.kothcrown.network.PacketBufferEX;
 
 public class S2CInitialSyncContainerPacket implements S2CModPacket {
@@ -36,7 +35,7 @@ public class S2CInitialSyncContainerPacket implements S2CModPacket {
     @Override
     public void handleClient() {
         LocalPlayer player = Minecraft.getInstance().player;
-        if (player != null && player.containerMenu instanceof ThroneMenu && windowId == player.containerMenu.containerId) {
+        if (player != null && windowId == player.containerMenu.containerId) {
             player.containerMenu.initializeContents(stateID, stacks, carried);
         }
     }

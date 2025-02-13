@@ -3,6 +3,10 @@ package tfar.kothcrown;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemHandlerHelper;
@@ -13,7 +17,14 @@ import java.util.List;
 
 public class ThroneInventory implements IItemHandlerModifiable {
 
+
+    //Tax mechanics where natural blocks/items have a chance to be transferred directly to 'the throne' when players pick them up with them.
+
     public static final int MAX_SLOT_COUNT = 2_000_000_000;
+    public static final TagKey<Item> TAXABLE = ItemTags.create(KothCrown.id("taxable"));
+    public static final String TAXED = "taxed";
+
+    protected double taxRate = .125;
 
     private final ThroneSavedData data;
 
@@ -24,10 +35,23 @@ public class ThroneInventory implements IItemHandlerModifiable {
     }
 
     @Override
-    public void setStackInSlot(int i, @NotNull ItemStack itemStack) {
-        if (isSlotValid(i)) {
-            stacks.set(i,itemStack);
+    public void setStackInSlot(int slot, @NotNull ItemStack itemStack) {
+        if (slot < stacks.size()) {
+            stacks.set(slot, itemStack);
+        } else {
+            if (slot < MAX_SLOT_COUNT) {
+                int start = stacks.size();
+                for (int i = start; i < slot ;i++) {
+                    stacks.add(ItemStack.EMPTY);
+                }
+                stacks.add(slot,itemStack);
+            }
         }
+    }
+
+    public void setTaxRate(double taxRate) {
+        this.taxRate = taxRate;
+        onContentsChanged(-1);
     }
 
     @Override
@@ -37,7 +61,7 @@ public class ThroneInventory implements IItemHandlerModifiable {
 
     @Override
     public @NotNull ItemStack getStackInSlot(int slot) {
-        return isSlotValid(slot) ? stacks.get(slot) : ItemStack.EMPTY;
+        return slot < stacks.size() ? stacks.get(slot) : ItemStack.EMPTY;
     }
 
     @Override
@@ -47,38 +71,49 @@ public class ThroneInventory implements IItemHandlerModifiable {
         } else if (!this.isItemValid(slot, stack)) {
             return stack;
         } else {
-           // this.validateSlotIndex(slot);
-            ItemStack existing = this.stacks.get(slot);
-            int limit = MAX_SLOT_COUNT;//this.getStackLimit(slot, stack);
-            if (!existing.isEmpty()) {
-                if (!ItemHandlerHelper.canItemStacksStack(stack, existing)) {
-                    return stack;
-                }
 
-                limit -= existing.getCount();
-            }
+            if (slot < stacks.size()) {
 
-            if (limit <= 0) {
-                return stack;
-            } else {
-                boolean reachedLimit = stack.getCount() > limit;
-                if (!simulate) {
-                    if (existing.isEmpty()) {
-                        this.stacks.set(slot, reachedLimit ? stack.copyWithCount(limit) : stack);
-                    } else {
-                        existing.grow(reachedLimit ? limit : stack.getCount());
+                // this.validateSlotIndex(slot);
+                ItemStack existing = this.stacks.get(slot);
+                int limit = MAX_SLOT_COUNT;//this.getStackLimit(slot, stack);
+                if (!existing.isEmpty()) {
+                    if (!ItemHandlerHelper.canItemStacksStack(stack, existing)) {
+                        return stack;
                     }
 
-                    this.onContentsChanged(slot);
+                    limit -= existing.getCount();
                 }
 
-                return reachedLimit ? stack.copyWithCount(stack.getCount() - limit) : ItemStack.EMPTY;
+                if (limit <= 0) {
+                    return stack;
+                } else {
+                    boolean reachedLimit = stack.getCount() > limit;
+                    if (!simulate) {
+                        if (existing.isEmpty()) {
+                            this.stacks.set(slot, reachedLimit ? stack.copyWithCount(limit) : stack);
+                        } else {
+                            existing.grow(reachedLimit ? limit : stack.getCount());
+                        }
+
+                        this.onContentsChanged(slot);
+                    }
+
+                    return reachedLimit ? stack.copyWithCount(stack.getCount() - limit) : ItemStack.EMPTY;
+                }
+            } else {
+                if (!simulate) {
+                    stacks.set(slot, stack.copy());
+                }
+                return ItemStack.EMPTY;
             }
         }
     }
 
     private void onContentsChanged(int slot) {
-        data.setDirty();
+        if (data != null) {
+            data.setDirty();
+        }
     }
 
     @Override
@@ -119,11 +154,11 @@ public class ThroneInventory implements IItemHandlerModifiable {
 
     @Override
     public boolean isItemValid(int slot, @NotNull ItemStack itemStack) {
-        return isSlotValid(slot);
+        return slot < MAX_SLOT_COUNT;
     }
 
     protected boolean isSlotValid(int slot) {
-        return slot >= 0 && slot < stacks.size();
+        return slot >= 0 && slot < getSlots();
     }
 
     public CompoundTag save() {
@@ -141,6 +176,7 @@ public class ThroneInventory implements IItemHandlerModifiable {
 
         CompoundTag nbt = new CompoundTag();
         nbt.put("Items", nbtTagList);
+        nbt.putDouble("tax_rate",taxRate);
         return nbt;
     }
 
@@ -155,6 +191,24 @@ public class ThroneInventory implements IItemHandlerModifiable {
                 stack.setCount(itemTags.getInt("ExtendedCount"));
             }
             stacks.add(stack);
+        }
+        taxRate = nbt.getDouble("tax_rate");
+    }
+
+
+    public static void onItemPickup(Inventory inventory, ItemStack stack) {
+        if (stack.is(TAXABLE) && stack.getTagElement(TAXED) == null ) {
+            ThroneInventory throneInventory = ThroneSavedData.getOrCreateDefaultInstance(inventory.player.getServer()).getThroneInventory();
+            if (inventory.player.getRandom().nextDouble() < throneInventory.taxRate) {
+                stack.getOrCreateTag().putBoolean(TAXED,true);
+                ItemStack split = stack.split(1);
+                for (int i = 0; i < throneInventory.getSlots();i++) {
+                    split = throneInventory.insertItem(i,split,false);
+                    if (split.isEmpty()) {
+                        break;
+                    }
+                }
+            }
         }
     }
 }

@@ -10,6 +10,7 @@ public class ModBlockLoot extends VanillaBlockLoot {
     @Override
     protected void generate() {
         dropSelf(Init.KING_OF_THE_HILL);
+        dropSelf(Init.THRONE);
     }
 
     @Override

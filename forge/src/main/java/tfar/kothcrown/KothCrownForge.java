@@ -2,20 +2,25 @@ package tfar.kothcrown;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.registries.RegisterEvent;
+import tfar.kothcrown.datagen.ModDatagen;
 
 @Mod(KothCrown.MOD_ID)
 public class KothCrownForge {
     
     public KothCrownForge() {
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
+        //ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER,KothCrownConfig.SERVER_SPEC);
         // This method is invoked by the Forge mod loader when it is ready
         // to load your mod. You can access Forge and Common code in this
         // project.
         bus.addListener(this::register);
+        bus.addListener(ModDatagen::gather);
 
         if (FMLEnvironment.dist.isClient()) {
             ModClientForge.init(bus);

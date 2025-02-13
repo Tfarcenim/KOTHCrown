@@ -8,6 +8,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import tfar.kothcrown.platform.Services;
 
 public class Init {
     public static final Item CROWN = new CrownItem(new Item.Properties());
@@ -19,5 +20,5 @@ public class Init {
 
     public static final Block THRONE = new ThroneBlock(BlockBehaviour.Properties.of().strength(1,1));
     public static final Item THRONE_ITEM = new BlockItem(THRONE,new Item.Properties());
-    public static final MenuType<ThroneMenu> THRONE_MENU = new MenuType<>(ThroneMenu::new,FeatureFlags.VANILLA_SET);
+    public static final MenuType<?> THRONE_MENU = Services.PLATFORM.createType();
 }

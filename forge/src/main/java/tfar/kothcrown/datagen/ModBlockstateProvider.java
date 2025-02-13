@@ -14,5 +14,6 @@ public class ModBlockstateProvider extends BlockStateProvider {
     @Override
     protected void registerStatesAndModels() {
         simpleBlock(Init.KING_OF_THE_HILL);
+        simpleBlock(Init.THRONE);
     }
 }

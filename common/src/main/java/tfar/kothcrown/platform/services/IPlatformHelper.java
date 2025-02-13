@@ -4,9 +4,18 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.SlotAccess;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickAction;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.loot.LootTable;
 import tfar.kothcrown.network.client.S2CModPacket;
 import tfar.kothcrown.network.server.C2SModPacket;
+import tfar.kothcrown.network.server.C2SSetTaxRatePacket;
 
 import java.util.function.Function;
 
@@ -54,4 +63,11 @@ public interface IPlatformHelper {
 
     int countPools(LootTable lootTable);
 
+    MenuType<?> createType();
+
+    boolean onItemStackedOn(ItemStack carriedItem, ItemStack stackedOnItem, Slot slot, ClickAction action, Player player, SlotAccess carriedSlotAccess);
+
+    AbstractContainerMenu createMenu(int i, Inventory inventory, Player player);
+
+    void handle(ServerPlayer player,C2SSetTaxRatePacket c2SSetTaxRatePacket);
 }
