@@ -3,6 +3,8 @@ package tfar.kothcrown;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Inventory;
@@ -196,11 +198,19 @@ public class ThroneInventory implements IItemHandlerModifiable {
     }
 
 
+    //also wondering, does KOTH block announce in chat when a player is near? or is it possible to make a global title or announcement when it is first activated.
+    //Would it also be possible to do this when a new player picks up the crown?
+
     public static void onItemPickup(Inventory inventory, ItemStack stack) {
+        MinecraftServer server = inventory.player.getServer();
+        if (stack.is(Init.CROWN)) {
+            server.getPlayerList().broadcastSystemMessage(inventory.player.getDisplayName().copy().append(" has picked up the crown!"),false);
+        }
+
         if (stack.is(TAXABLE) && stack.getTagElement(TAXED) == null ) {
-            ThroneInventory throneInventory = ThroneSavedData.getOrCreateDefaultInstance(inventory.player.getServer()).getThroneInventory();
+            ThroneInventory throneInventory = ThroneSavedData.getOrCreateDefaultInstance(server).getThroneInventory();
+            stack.getOrCreateTag().putBoolean(TAXED,true);
             if (inventory.player.getRandom().nextDouble() < throneInventory.taxRate) {
-                stack.getOrCreateTag().putBoolean(TAXED,true);
                 ItemStack split = stack.split(1);
                 for (int i = 0; i < throneInventory.getSlots();i++) {
                     split = throneInventory.insertItem(i,split,false);

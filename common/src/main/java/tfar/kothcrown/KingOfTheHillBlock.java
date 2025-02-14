@@ -1,6 +1,9 @@
 package tfar.kothcrown;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ClientboundCommandSuggestionsPacket;
+import net.minecraft.network.protocol.game.ClientboundCustomChatCompletionsPacket;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -13,6 +16,8 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 public class KingOfTheHillBlock extends Block implements EntityBlock {
     public KingOfTheHillBlock(Properties properties) {
@@ -30,6 +35,13 @@ public class KingOfTheHillBlock extends Block implements EntityBlock {
         BlockEntity blockentity = pLevel.getBlockEntity(pPos);
         if (pPlayer.canUseGameMasterBlocks()) {
             pPlayer.openMenu((KingOfTheHillBlockEntity)blockentity);
+            if (!pLevel.isClientSide) {
+                ServerPlayer serverPlayer = (ServerPlayer) pPlayer;
+                serverPlayer.connection.send(
+                        new ClientboundCustomChatCompletionsPacket(ClientboundCustomChatCompletionsPacket.Action.SET, List.of("test","example")));
+            }
+
+
             return InteractionResult.sidedSuccess(pLevel.isClientSide);
         } else {
             return InteractionResult.PASS;

@@ -17,9 +17,17 @@ public class ThroneMenu extends AbstractContainerMenu {
     public final int rows;
     public final ThroneInventory dankInventory;
 
+    //5%, 10%, 20%, 30%, and 50%
     public enum ButtonAction {
-        LOCK_FREQUENCY, SORT,
-        TOGGLE_TAG, TOGGLE_PICKUP,  COMPRESS;
+        FIVE(.05), TEN(.1),
+        TWENTY(.2), THIRTY(.3),  FIFTY(.5);
+
+        private final double d;
+
+        ButtonAction(double d) {
+            this.d = d;
+        }
+
         static final ButtonAction[] VALUES = values();
     }
 
@@ -134,9 +142,8 @@ public class ThroneMenu extends AbstractContainerMenu {
         if (id < 0 || id >= ButtonAction.VALUES.length) return false;
         ButtonAction buttonAction = ButtonAction.VALUES[id];
         if (player instanceof ServerPlayer serverPlayer) {
-            switch (buttonAction) {
-
-            }
+            ThroneInventory throneInventory = ThroneSavedData.getOrCreateDefaultInstance(serverPlayer.server).getThroneInventory();
+            throneInventory.setTaxRate(buttonAction.d);
         }
         return true;
     }

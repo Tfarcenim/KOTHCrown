@@ -19,6 +19,7 @@ import tfar.kothcrown.PacketHandlerForge;
 import tfar.kothcrown.ThroneInventory;
 import tfar.kothcrown.ThroneMenu;
 import tfar.kothcrown.ThroneSavedData;
+import tfar.kothcrown.mixin.LootTableMixinForge;
 import tfar.kothcrown.network.client.S2CModPacket;
 import tfar.kothcrown.network.server.C2SModPacket;
 import tfar.kothcrown.network.server.C2SSetTaxRatePacket;
@@ -79,7 +80,7 @@ public class ForgePlatformHelper implements IPlatformHelper {
 
     @Override
     public int countPools(LootTable lootTable) {
-        return 1;//lootTable.pools.size();
+        return ((LootTableMixinForge)lootTable).getPools().size();
     }
 
     @Override

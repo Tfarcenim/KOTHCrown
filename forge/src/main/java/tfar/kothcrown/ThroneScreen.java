@@ -4,6 +4,7 @@ import com.mojang.datafixers.util.Pair;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -30,12 +31,50 @@ public class ThroneScreen extends AbstractContainerScreen<ThroneMenu> {
 
     EditBox frequency;
 
+    public static boolean editboxEnabled = false;
+
+
     public ThroneScreen(ThroneMenu $$0, Inventory $$1, Component $$2) {
         super($$0, $$1, $$2);
         this.imageHeight = 114 + this.menu.rows * 18;
         this.inventoryLabelY = this.imageHeight - 94;
 
     }
+
+    @Override
+    protected void init() {
+        super.init();
+        int i = (this.width - this.imageWidth) / 2;
+        int j = (this.height - this.imageHeight) / 2;
+        if (editboxEnabled) {
+            initEditbox();
+        }
+
+        int height = 15;
+        int yPos = j+2;
+
+        addRenderableWidget(Button.builder(Component.literal("5%"),pButton -> {
+            sendButtonToServer(ThroneMenu.ButtonAction.FIVE);
+        }).bounds(i+60,yPos,18,height).build());
+
+        addRenderableWidget(Button.builder(Component.literal("10%"),pButton -> {
+            sendButtonToServer(ThroneMenu.ButtonAction.TEN);
+        }).bounds(i+60+23,yPos,20,height).build());
+
+        addRenderableWidget(Button.builder(Component.literal("20%"),pButton -> {
+            sendButtonToServer(ThroneMenu.ButtonAction.TWENTY);
+        }).bounds(i+60+23*2,yPos,20,height).build());
+
+        addRenderableWidget(Button.builder(Component.literal("30%"),pButton -> {
+            sendButtonToServer(ThroneMenu.ButtonAction.THIRTY);
+        }).bounds(i+60+23*3,yPos,20,height).build());
+
+        addRenderableWidget(Button.builder(Component.literal("50%"),pButton -> {
+            sendButtonToServer(ThroneMenu.ButtonAction.FIFTY);
+        }).bounds(i+60+23*4,yPos,20,height).build());
+
+    }
+
 
 
     protected void initEditbox() {
@@ -136,7 +175,9 @@ public class ThroneScreen extends AbstractContainerScreen<ThroneMenu> {
     public void render(GuiGraphics stack, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(stack);
         super.render(stack, mouseX, mouseY, partialTicks);
-        this.frequency.render(stack, mouseX, mouseY, partialTicks);
+        if (editboxEnabled) {
+            this.frequency.render(stack, mouseX, mouseY, partialTicks);
+        }
         this.renderTooltip(stack, mouseX, mouseY);
     }
 
@@ -153,14 +194,6 @@ public class ThroneScreen extends AbstractContainerScreen<ThroneMenu> {
              //   tooltip.add(component2);
             }
         }
-    }
-
-    @Override
-    protected void init() {
-        super.init();
-
-        int j = (this.height - this.imageHeight) / 2;
-        initEditbox();
     }
 
     @Override
@@ -183,8 +216,10 @@ public class ThroneScreen extends AbstractContainerScreen<ThroneMenu> {
             this.minecraft.player.closeContainer();
         }
 
-        if ((this.frequency.keyPressed(keyCode, scanCode, modifiers) || this.frequency.canConsumeInput())) {
-            return true;
+        if (editboxEnabled) {
+            if ((this.frequency.keyPressed(keyCode, scanCode, modifiers) || this.frequency.canConsumeInput())) {
+                return true;
+            }
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }

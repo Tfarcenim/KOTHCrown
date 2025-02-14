@@ -2,6 +2,9 @@
   "values": [
     "#minecraft:dirt",
     "#minecraft:logs",
-    "#minecraft:stone_crafting_materials"
+    "#minecraft:stone_crafting_materials",
+    "#forge:raw_materials",
+    "#forge:gems",
+    "minecraft:redstone"
   ]
 }

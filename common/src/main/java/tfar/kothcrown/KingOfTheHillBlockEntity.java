@@ -12,6 +12,7 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.level.Level;
@@ -30,8 +31,39 @@ public class KingOfTheHillBlockEntity extends BlockEntity implements MenuProvide
     protected ResourceLocation lootTable;
     protected long lootTableSeed;
     protected int delay = 20;
+    protected int radius = 10;
     protected int tick;
     protected Container container = new SimpleContainer(54);
+
+    protected boolean wasPlayerNearby;
+
+    protected final ContainerData delayData = new ContainerData() {
+        @Override
+        public int get(int i) {
+            switch (i) {
+                case 0: return delay;
+                case 1: return radius;
+            }
+            return -1;
+        }
+
+        @Override
+        public void set(int i, int value) {
+            switch (i) {
+                case 0 -> {
+                    delay = value;
+                }
+                case 1 -> {
+                    radius = value;
+                }
+            }
+        }
+
+        @Override
+        public int getCount() {
+            return 2;
+        }
+    };
 
     public KingOfTheHillBlockEntity(BlockPos pos, BlockState state) {
         super(Init.KING_OF_THE_HILL_BLOCK_ENTITY, pos, state);
@@ -42,17 +74,23 @@ public class KingOfTheHillBlockEntity extends BlockEntity implements MenuProvide
             pBlockEntity.tick++;
             if (pBlockEntity.tick >= pBlockEntity.delay) {
                 pBlockEntity.tick = 0;
-                pBlockEntity.dropItems();
+                boolean b = pBlockEntity.dropItems();
+
+                if(b && !pBlockEntity.wasPlayerNearby) {
+                    pBlockEntity.wasPlayerNearby = true;
+                    pLevel.getServer().getPlayerList().broadcastSystemMessage(Component.literal("Player has activated King of the Hill block!"),false);
+                }
+
             }
             pBlockEntity.setChanged();
         }
     }
 
     public boolean isPlayerNearby(Level pLevel, BlockPos pPos) {
-        return pLevel.getNearestPlayer(pPos.getX(),pPos.getY(),pPos.getZ(),10,false) != null;
+        return pLevel.getNearestPlayer(pPos.getX(),pPos.getY(),pPos.getZ(),radius,false) != null;
     }
 
-    protected void dropItems() {
+    protected boolean dropItems() {
         if (lootTable != null) {
             if (this.level.getServer() != null) {
                 container.clearContent();
@@ -62,8 +100,10 @@ public class KingOfTheHillBlockEntity extends BlockEntity implements MenuProvide
 
                 loottable.fill(container, lootparams$builder.create(LootContextParamSets.CHEST), this.lootTableSeed);
                 Containers.dropContents(level,worldPosition,container);
+                return true;
             }
         }
+        return false;
     }
 
     @Override
@@ -75,6 +115,7 @@ public class KingOfTheHillBlockEntity extends BlockEntity implements MenuProvide
         tag.putLong(RandomizableContainerBlockEntity.LOOT_TABLE_SEED_TAG,lootTableSeed);
         tag.putInt("delay",delay);
         tag.putInt("tick",tick);
+        tag.putInt("radius",radius);
     }
 
     @Override
@@ -85,6 +126,7 @@ public class KingOfTheHillBlockEntity extends BlockEntity implements MenuProvide
         lootTableSeed = tag.getLong(RandomizableContainerBlockEntity.LOOT_TABLE_SEED_TAG);
         delay = tag.getInt("delay");
         tick = tag.getInt("tick");
+        radius = tag.getInt("radius");
     }
 
     @Override
@@ -95,6 +137,6 @@ public class KingOfTheHillBlockEntity extends BlockEntity implements MenuProvide
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int i, Inventory inventory, Player player) {
-        return new KingOfTheHillMenu(i,inventory, ContainerLevelAccess.create(level,worldPosition),new SimpleContainerData(1),lootTable);
+        return new KingOfTheHillMenu(i,inventory, ContainerLevelAccess.create(level,worldPosition),new SimpleContainerData(1),lootTable,delayData);
     }
 }
