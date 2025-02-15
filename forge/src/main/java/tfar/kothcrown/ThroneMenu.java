@@ -1,5 +1,6 @@
 package tfar.kothcrown;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -143,6 +144,12 @@ public class ThroneMenu extends AbstractContainerMenu {
         ButtonAction buttonAction = ButtonAction.VALUES[id];
         if (player instanceof ServerPlayer serverPlayer) {
             ThroneInventory throneInventory = ThroneSavedData.getOrCreateDefaultInstance(serverPlayer.server).getThroneInventory();
+
+            if (throneInventory.taxRate != buttonAction.d) {
+                player.getServer().getPlayerList().broadcastSystemMessage(
+                        Component.literal("Throne Tax Rate set to "+(buttonAction.d * 100)+"%"),false);
+            }
+
             throneInventory.setTaxRate(buttonAction.d);
         }
         return true;

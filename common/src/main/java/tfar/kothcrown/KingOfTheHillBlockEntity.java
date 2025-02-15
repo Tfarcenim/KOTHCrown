@@ -78,7 +78,8 @@ public class KingOfTheHillBlockEntity extends BlockEntity implements MenuProvide
 
                 if(b && !pBlockEntity.wasPlayerNearby) {
                     pBlockEntity.wasPlayerNearby = true;
-                    pLevel.getServer().getPlayerList().broadcastSystemMessage(Component.literal("Player has activated King of the Hill block!"),false);
+                    pLevel.getServer().getPlayerList().broadcastSystemMessage(
+                            Component.literal("Player has activated King of the Hill block at "+pBlockEntity.worldPosition +"!"),false);
                 }
 
             }

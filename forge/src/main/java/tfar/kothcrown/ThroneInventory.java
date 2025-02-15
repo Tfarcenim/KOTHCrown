@@ -105,7 +105,7 @@ public class ThroneInventory implements IItemHandlerModifiable {
                 }
             } else {
                 if (!simulate) {
-                    stacks.set(slot, stack.copy());
+                    stacks.add(slot, stack.copy());
                 }
                 return ItemStack.EMPTY;
             }
@@ -194,7 +194,9 @@ public class ThroneInventory implements IItemHandlerModifiable {
             }
             stacks.add(stack);
         }
-        taxRate = nbt.getDouble("tax_rate");
+        if (nbt.contains("tax_rate")) {
+            taxRate = nbt.getDouble("tax_rate");
+        }
     }
 
 
